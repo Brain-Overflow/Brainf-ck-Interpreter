@@ -2,11 +2,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug bf (add.b)",
+            "name": "Debug brainfuck (hello_world.b)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bf",
-            "args": ["${workspaceFolder}/programs/add.b"],
+            "program": "${workspaceFolder}/build/brainfuck",
+            "args": ["${workspaceFolder}/programs/hello_world.b"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -23,10 +23,10 @@
             "preLaunchTask": "CMake: build"
         },
         {
-            "name": "Debug bf (no arguments)",
+            "name": "Debug brainfuck (no arguments)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bf",
+            "program": "${workspaceFolder}/build/brainfuck",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
