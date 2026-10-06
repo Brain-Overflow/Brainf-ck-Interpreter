@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <cstdio>
 #include <utility>
+#include <stack>
 
 class Interpreter {
     private:
@@ -16,6 +17,7 @@ class Interpreter {
         std::vector<std::uint8_t> data_cells;
         std::size_t data_pointer = 0;
         static constexpr std::size_t initial_number_of_data_cells = 30000;
+        std::vector<std::size_t> jump_table;
 
         void execute_current_instruction() {
             const char current_instruction = instructions[instruction_pointer];
@@ -35,7 +37,7 @@ class Interpreter {
                         --data_pointer;
                     }
                     else {
-                        throw std::out_of_range("Error: Data pointer cannot be less than zero!");
+                        throw std::runtime_error("Error: Data pointer cannot be less than zero!");
                     }  
 
                     break;
@@ -63,58 +65,14 @@ class Interpreter {
                 }
                 case '[': {
                     if (data_cells[data_pointer] == 0) {
-                        int search_depth = 1;
-
-                        std::size_t next_instruction_pointer = instruction_pointer;
-
-                        while (search_depth != 0) {
-                            ++next_instruction_pointer;
-
-                            if (next_instruction_pointer >= instructions.size()) {
-                                throw std::out_of_range(std::format("Error: Did not find a matching ']' for '[' at {} before the end of the instructions!", instruction_pointer));
-                            }
-
-                            char next_instruction = instructions[next_instruction_pointer];
-
-                            if (next_instruction == '[') {
-                                ++search_depth;
-                            }
-                            else if (next_instruction == ']') {
-                                --search_depth;
-                            }
-                        }
-
-                        instruction_pointer = next_instruction_pointer;
+                        instruction_pointer = jump_table[instruction_pointer];
                     }
 
                     break;
                 }
                 case ']': {
                     if (data_cells[data_pointer] != 0) {
-                        int search_depth = 1;
-
-                        std::size_t next_instruction_pointer = instruction_pointer;
-
-                        while (search_depth != 0) {
-                            if (next_instruction_pointer == 0) {
-                                throw std::out_of_range(std::format("Error: Did not find a matching '[' for ']' at {} before the beginning of the instructions!", instruction_pointer));
-                            }
-
-                            --next_instruction_pointer;
-
-                            char next_instruction = instructions[next_instruction_pointer];
-
-                            if (next_instruction == ']') {
-                                ++search_depth;
-                            }
-                            else if (next_instruction == '[') {
-                                --search_depth;
-                            }
-
-
-                        }
-
-                        instruction_pointer = next_instruction_pointer;
+                        instruction_pointer = jump_table[instruction_pointer];
                     }
 
                     break;
@@ -131,9 +89,39 @@ class Interpreter {
             return instruction_pointer >= instructions.size();
         }
 
-    public:
-        explicit Interpreter(std::string instructions) : instructions(std::move(instructions)), data_cells(initial_number_of_data_cells) {
+        void build_jump_table() {
+            std::stack<std::size_t> jump_stack;
 
+            std::size_t temporary_instruction_pointer = 0;
+
+            while (temporary_instruction_pointer < instructions.size()) {
+                char current_instruction = instructions[temporary_instruction_pointer];
+
+                if (current_instruction == '[') {
+                    jump_stack.push(temporary_instruction_pointer);
+                }
+                else if (current_instruction == ']') {
+                    if (!jump_stack.empty()) {
+                        const std::size_t opening_bracket_instruction_pointer = jump_stack.top();
+                        jump_table[opening_bracket_instruction_pointer] = temporary_instruction_pointer;
+                        jump_table[temporary_instruction_pointer] = opening_bracket_instruction_pointer;
+                        jump_stack.pop();
+                    } else {
+                        throw std::runtime_error(std::format("Error: Found a ']' at {} without a corresponding '['!", temporary_instruction_pointer));
+                    }
+                }
+
+                ++temporary_instruction_pointer;
+            }
+
+            if (!jump_stack.empty()) {
+                throw std::runtime_error(std::format("Error: Found a '[' at {} without a corresponding ']'!", jump_stack.top()));
+            }
+        }
+
+    public:
+        explicit Interpreter(std::string instructions_) : instructions(std::move(instructions_)), data_cells(initial_number_of_data_cells), jump_table(instructions.size()) {
+            build_jump_table();
         }
 
         // Return the data cell at the index or 0 for every data cell past the end of the tape.
