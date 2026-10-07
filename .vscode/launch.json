@@ -21,6 +21,27 @@
                 }
             ],
             "preLaunchTask": "CMake: build"
+        },        
+        {
+            "name": "Debug brainfuck (mandelbrot.b)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/brainfuck",
+            "args": ["${workspaceFolder}/programs/mandelbrot.b"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "CMake: build"
         },
         {
             "name": "Debug brainfuck (no arguments)",
